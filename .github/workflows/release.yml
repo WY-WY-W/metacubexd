@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -74,7 +75,7 @@ jobs:
 
   release-image:
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: ${{ needs.release-please.outputs.release_created || github.event_name == 'workflow_dispatch' }}
 
     permissions:
       contents: read
@@ -106,18 +107,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.CI_TOKEN }}
 
+      - name: Generate Docker tags
+        id: docker-tags
+        run: |
+          TAGS="ghcr.io/metacubex/metacubexd:latest"
+          if [ -n "${{ needs.release-please.outputs.tag_name }}" ]; then
+            TAGS="$TAGS,ghcr.io/metacubex/metacubexd:${{ needs.release-please.outputs.tag_name }}"
+          fi
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
       - uses: docker/build-push-action@v6
         with:
           context: .
           builder: ${{ steps.buildx.outputs.name }}
           file: Dockerfile
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            ghcr.io/metacubex/metacubexd:latest
-            ghcr.io/metacubex/metacubexd:${{ needs.release-please.outputs.tag_name }}
+          tags: ${{ steps.docker-tags.outputs.tags }}
 
   update-screenshots:
     needs: release-please
