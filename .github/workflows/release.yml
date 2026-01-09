@@ -110,9 +110,9 @@ jobs:
       - name: Generate Docker tags
         id: docker-tags
         run: |
-          TAGS="ghcr.io/metacubex/metacubexd:latest"
+          TAGS="ghcr.io/wy-wy-w/metacubexd:latest"
           if [ -n "${{ needs.release-please.outputs.tag_name }}" ]; then
-            TAGS="$TAGS,ghcr.io/metacubex/metacubexd:${{ needs.release-please.outputs.tag_name }}"
+            TAGS="$TAGS,ghcr.io/wy-wy-w/metacubexd:${{ needs.release-please.outputs.tag_name }}"
           fi
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
 
